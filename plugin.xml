@@ -23,6 +23,12 @@
         <source-file src="src/XposedInit.java" target-dir="src/com/skynet/xposed"/>
     </platform>
 
+    <edit-config file="AndroidManifest.xml" target="/manifest/application" mode="merge">
+        <meta-data android:name="xposedmodule" android:value="true"/>
+        <meta-data android:name="xposedminversion" android:value="53"/>
+        <meta-data android:name="xposeddescription" android:value="心动监听"/>
+    </edit-config>
+
     <framework src="de.robv.android.xposed:api:82"/>
     <framework src="de.robv.android.xposed:api:82:sources"/>
 </plugin>
