@@ -1,0 +1,20 @@
+{
+  "version": "0.0.2",
+  "name": "cordova-android-xposed",
+  "cordova_name": "cordova-android-xposed",
+  "description": "安卓Xposed插件",
+  "license": "Apache 2.0",
+  "repo": "https://github.com/SinRedemption/cordova-plugin-android-xposed",
+  "issue": "https://github.com/SinRedemption/cordova-plugin-android-xposed/issues",
+  "keywords": [
+    "xposed",
+    "android"
+  ],
+  "platforms": [
+    "android"
+  ],
+  "engines": [{
+    "name": "cordova",
+    "version": ">=8.0.0"
+  }]
+}

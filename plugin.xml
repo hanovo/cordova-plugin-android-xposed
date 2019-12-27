@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<plugin xmlns="http://www.phonegap.com/ns/plugins/1.0" 
+    xmlns:android="http://schemas.android.com/apk/res/android" id="cordova-plugin-android-xposed" version="0.0.1">
+
+    <name>cordova-plugin-android-xposed</name>
+    <description>Cordova XPosed Plugin For Android</description>
+    <license>Apache 2.0</license>
+    <keywords>xposed, android</keywords>
+
+    <repo>https://github.com/SinRedemption/cordova-plugin-android-xposed</repo>
+    <issue>https://github.com/SinRedemption/cordova-plugin-android-xposed/issues</issue>
+
+    <engines>
+        <engine name="cordova" version=">=8.0.0" />
+    </engines>
+
+    <js-module src="www/android-xposed.js" name="AndroidXposed">
+        <clobbers target="plugins.androidXposed" />
+    </js-module>
+
+    <platform name="android">
+        <source-file src="xposed_init" target-dir="assets"/>
+        <source-file src="src/XposedInit.java" target-dir="src/com/skynet/xposed"/>
+    </platform>
+
+    <framework src="de.robv.android.xposed:api:82"/>
+    <framework src="de.robv.android.xposed:api:82:sources"/>
+</plugin>
