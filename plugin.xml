@@ -14,7 +14,7 @@
         <engine name="cordova" version=">=8.0.0" />
     </engines>
 
-    <js-module src="www/android-xposed.js" name="AndroidXposed">
+    <js-module src="www/xposed.js" name="AndroidXposed">
         <clobbers target="plugins.androidXposed" />
     </js-module>
 
