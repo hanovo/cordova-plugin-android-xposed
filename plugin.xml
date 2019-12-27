@@ -19,7 +19,7 @@
     </js-module>
 
     <platform name="android">
-        <source-file src="xposed_init" target-dir="assets"/>
+        <source-file src="src/xposed_init" target-dir="assets"/>
         <source-file src="src/XposedInit.java" target-dir="src/com/skynet/xposed"/>
     </platform>
 
