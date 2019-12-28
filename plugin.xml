@@ -20,7 +20,7 @@
 
     <platform name="android">
         <source-file src="assets/xposed_init" target-dir="assets"/>
-        <source-file src="src/*" target-dir="src/com/skynet/xposed"/>
+        <source-file src="src/xposed" target-dir="src/com/skynet/xposed"/>
 
         <config-file target="AndroidManifest.xml" parent="/manifest/application/">
             <meta-data android:name="xposedmodule" android:value="true"/>
