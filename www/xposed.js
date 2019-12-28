@@ -5,6 +5,6 @@ module.exports = {
   listen: function (success, error) {
     console.log("Initializing android xposed cordova plugin...");
 
-    cordova.exec(success, error, "AndroidXPosedPluginEntry", "listen", []);
+    cordova.exec(success, error, "XPosedPluginEntry", "listen", []);
   }
 };
