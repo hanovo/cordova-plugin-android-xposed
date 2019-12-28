@@ -18,4 +18,8 @@ module.exports = {
   stopApp: function (packageName, successCallback, errorCallback) {
     cordova.exec(successCallback, errorCallback, "XPosedPluginEntry", "stopApp", [packageName]);
   },
+
+  getLogs: function (packageName, successCallback, errorCallback) {
+    cordova.exec(successCallback, errorCallback, "XPosedPluginEntry", "getLogs", [packageName]);
+  },
 };
