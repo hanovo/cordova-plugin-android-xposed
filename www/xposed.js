@@ -1,10 +1,17 @@
 "use strict";
 
 module.exports = {
-  // value must be an ArrayBuffer
-  init: function (success, error) {
+  init: function (successCallback, errorCallback) {
     console.log("Init android xposed cordova plugin...");
 
-    cordova.exec(success, error, "XPosedPluginEntry", "init", []);
-  }
+    cordova.exec(successCallback, errorCallback, "XPosedPluginEntry", "init", []);
+  },
+
+  getHookableApps: function (successCallback, errorCallback) {
+    cordova.exec(successCallback, errorCallback, "XPosedPluginEntry", "getHookableApps", []);
+  },
+
+  hookApp: function (packageName, successCallback, errorCallback) {
+    cordova.exec(successCallback, errorCallback, "XPosedPluginEntry", "hookApp", [packageName]);
+  },
 };
