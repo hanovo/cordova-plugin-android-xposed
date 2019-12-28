@@ -2,9 +2,9 @@
 
 module.exports = {
   // value must be an ArrayBuffer
-  listen: function (success, error) {
+  init: function (success, error) {
     console.log("Initializing android xposed cordova plugin...");
 
-    cordova.exec(success, error, "XPosedPluginEntry", "listen", []);
+    cordova.exec(success, error, "XPosedPluginEntry", "init", []);
   }
 };
