@@ -1,19 +1,43 @@
 package com.skynet.xposed;
 
+import android.content.pm.ApplicationInfo;
+
+import com.skynet.xposed.hookers.HookableApps;
+import com.skynet.xposed.hookers.alipay.AlipayHooker;
+
 import de.robv.android.xposed.IXposedHookLoadPackage;
-import de.robv.android.xposed.XC_MethodHook;
-import de.robv.android.xposed.XposedBridge;
-import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 /**
  * XPosed入口
  */
-public class XposedInit implements IXposedHookLoadPackage {
+public class XposedMain implements IXposedHookLoadPackage {
   @Override
   public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) throws Throwable {
-    if (!lpparam.packageName.equals("com.example.basic")) return;
+    // 过滤系统应用
+    if (lpparam.appInfo == null || (lpparam.appInfo.flags & (ApplicationInfo.FLAG_SYSTEM | ApplicationInfo.FLAG_UPDATED_SYSTEM_APP)) != 0) {
+      return;
+    }
 
+    // 忽略不可Hook的App
+    if (!HookableApps.inst().canHook(lpparam.packageName)) return;
+
+    switch (lpparam.packageName) {
+      case HookableApps.PackageAlipay:
+        AlipayHooker.inst().hook(lpparam);
+        break;
+
+      case HookableApps.PackageUnionpay:
+        break;
+
+      case HookableApps.PackageWechat:
+        break;
+
+      default:
+        break;
+    }
+
+    /*
     XposedHelpers.findAndHookMethod("com.example.basic.MainActivity", lpparam.classLoader, "createNewTitle", String.class, new XC_MethodHook() {
       @Override
       protected void beforeHookedMethod(XC_MethodHook.MethodHookParam param) throws Throwable {
@@ -29,5 +53,6 @@ public class XposedInit implements IXposedHookLoadPackage {
         // param.setResult("Hello Xposed!"); // 修改替换返回值
       }
     });
+    */
   }
 }
