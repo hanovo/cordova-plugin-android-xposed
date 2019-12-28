@@ -11,7 +11,11 @@ module.exports = {
     cordova.exec(successCallback, errorCallback, "XPosedPluginEntry", "getHookableApps", []);
   },
 
-  hookApp: function (packageName, successCallback, errorCallback) {
-    cordova.exec(successCallback, errorCallback, "XPosedPluginEntry", "hookApp", [packageName]);
+  startApp: function (packageName, successCallback, errorCallback) {
+    cordova.exec(successCallback, errorCallback, "XPosedPluginEntry", "startApp", [packageName]);
+  },
+
+  stopApp: function (packageName, successCallback, errorCallback) {
+    cordova.exec(successCallback, errorCallback, "XPosedPluginEntry", "stopApp", [packageName]);
   },
 };
