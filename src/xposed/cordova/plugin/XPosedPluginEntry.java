@@ -62,7 +62,7 @@ public class XPosedPluginEntry extends CordovaPlugin {
    * 初始化插件。
    */
   void init(JSONArray args, CallbackContext callbackContext) {
-    // todo: 初始化
+    callbackContext.success("XPosedPluginEntry 插件初始化成功");
   }
 
   /**
