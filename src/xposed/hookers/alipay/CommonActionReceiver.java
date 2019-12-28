@@ -150,6 +150,7 @@ public class CommonActionReceiver extends BroadcastReceiver {
             String url = "https://tradeeportlet.alipay.com/wireless/tradeDetail.htm?tradeNo=" + tradeno + "&source=channel&_from_url=https%3A%2F%2Frender.alipay.com%2Fp%2Fz%2Fmerchant-mgnt%2Fsimple-order._h_t_m_l_%3Fsource%3Dmdb_card";
 
             try {
+              /*
               HttpUtils httpUtils = new HttpUtils(15000);
               httpUtils.configResponseTextCharset("GBK");
               RequestParams params = new RequestParams();
@@ -165,7 +166,7 @@ public class CommonActionReceiver extends BroadcastReceiver {
                 public void onSuccess(ResponseInfo<String> arg0) {
                   try {
                     String result = arg0.result;
-                    /*Document document = Jsoup.parse(result);
+                    Document document = Jsoup.parse(result);
                     Elements elements = document.getElementsByClass("trade-info-value");
                     if (elements.size() >= 5) {
                       dbManager.updateTradeNo(tradeno, "1");
@@ -175,12 +176,13 @@ public class CommonActionReceiver extends BroadcastReceiver {
                       dbManager.addOrder(new OrderBean(money, mark, "alipay", tradeno, dt, "", 0));
                       MainActivity.logTrace("收到支付宝订单,订单号：" + tradeno + "金额：" + money + "备注：" + mark);
                       collectUpCallback("alipay", tradeno, money, mark, dt);
-                    }*/
+                    }
                   } catch (Exception e) {
                     PayHelperUtils.sendMsg(context, "IntentActions.AppTradeNoReceived-->>onSuccess异常" + e.getMessage());
                   }
                 }
               });
+              */
             } catch (Exception e) {
               PayHelperUtils.sendMsg(context, "IntentActions.TRADE_NO_RECEIVED异常" + e.getMessage());
             }
@@ -251,6 +253,7 @@ public class CommonActionReceiver extends BroadcastReceiver {
 
       XposedBridge.log("收款回调[POST]" + notifyUrl);
 
+      /*
       HttpUtils httpUtils = new HttpUtils(30000);
       httpUtils.send(HttpRequest.HttpMethod.POST, notifyUrl, params, new RequestCallBack<String>() {
         @Override
@@ -275,6 +278,7 @@ public class CommonActionReceiver extends BroadcastReceiver {
           update(no, result);
         }
       });
+      */
     } catch (Exception e) {
       // MainActivity.logTrace("收款回调出错: " + e.getMessage());
     }

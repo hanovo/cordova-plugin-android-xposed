@@ -45,47 +45,6 @@ public class PayHelperUtils {
   public static boolean isFirst = true;
 
   /**
-   * 将图片转换成Base64编码的字符串
-   *
-   * @param path
-   * @return base64编码的字符串
-   */
-  public static String imageToBase64(String path) {
-    if (TextUtils.isEmpty(path)) return null;
-
-    InputStream is = null;
-    String result = null;
-
-    byte[] data;
-    try {
-      is = new FileInputStream(path);
-
-      // 创建一个字符流大小的数组。
-      data = new byte[is.available()];
-
-      // 写入数组
-      is.read(data);
-
-      // 用默认的编码格式进行编码
-      result = Base64.encodeToString(data, Base64.DEFAULT);
-    } catch (IOException e) {
-      e.printStackTrace();
-    } finally {
-      if (null != is) {
-        try {
-          is.close();
-        } catch (IOException e) {
-          e.printStackTrace();
-        }
-      }
-
-    }
-
-    result = "\"data:image/gif;base64," + result + "\"";
-    return result;
-  }
-
-  /**
    * 发送启动App消息，以启动对应的App。
    */
   public static void sendLaunchAppMsg(String money, String mark, String type, Context context) {
