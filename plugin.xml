@@ -38,7 +38,7 @@
         </config-file>
     </platform>
 
-    <framework src="de.robv.android.xposed:api:82" type="week"/>
-    <framework src="de.robv.android.xposed:api:82:sources"/>
+    <framework src="de.robv.android.xposed:api:82" type="gradleReference"/>
+    <framework src="de.robv.android.xposed:api:82:sources" type="gradleReference"/>
     <framework src="com.alibaba:fastjson:1.2.51"/>
 </plugin>
