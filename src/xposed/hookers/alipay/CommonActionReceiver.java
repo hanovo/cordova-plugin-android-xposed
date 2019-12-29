@@ -7,17 +7,8 @@ import android.content.Intent;
 import android.os.Handler;
 import android.text.TextUtils;
 
-import com.alibaba.fastjson.JSON;
-
-import com.lidroid.xutils.HttpUtils;
-import com.lidroid.xutils.exception.HttpException;
 import com.lidroid.xutils.http.RequestParams;
-import com.lidroid.xutils.http.ResponseInfo;
-import com.lidroid.xutils.http.callback.RequestCallBack;
-import com.lidroid.xutils.http.client.HttpRequest;
-import com.skynet.member.App;
 import com.skynet.xposed.utils.AbSharedUtil;
-import com.skynet.xposed.utils.IntentActions;
 import com.skynet.xposed.utils.MD5;
 import com.skynet.xposed.utils.PayHelperUtils;
 import com.skynet.xposed.beans.QrCodeBean;
@@ -44,7 +35,7 @@ public class CommonActionReceiver extends BroadcastReceiver {
     try {
       String action = intent.getAction();
       switch (Objects.requireNonNull(action)) {
-        case IntentActions.AppBillReceived: {
+        case AlipayIntentActions.AppBillReceived: {
           PayHelperUtils.sendMsg(context, "get Post--");
 
           String no = intent.getStringExtra("bill_no");
@@ -77,13 +68,13 @@ public class CommonActionReceiver extends BroadcastReceiver {
           break;
         }
 
-        case IntentActions.AppQrCodeReceived: {
+        case AlipayIntentActions.AppQrCodeReceived: {
           String money = intent.getStringExtra("money");
           String mark = intent.getStringExtra("mark");
           String type = intent.getStringExtra("type");
           String payUrl = intent.getStringExtra("payurl");
 
-          AlipayDataCache dbManager = new AlipayDataCache(App.getInstance().getApplicationContext());
+          AlipayDataCache dbManager = new AlipayDataCache(context);
           String dt = System.currentTimeMillis() + "";
           DecimalFormat df = new DecimalFormat("0.00");
           money = df.format(Double.parseDouble(money));
@@ -93,19 +84,19 @@ public class CommonActionReceiver extends BroadcastReceiver {
           break;
         }
 
-        case IntentActions.AppMessageReceived: {
+        case AlipayIntentActions.AppMessageReceived: {
           String msg = intent.getStringExtra("msg");
           // MainActivity.logTrace(msg);
           break;
         }
 
-        case IntentActions.AlipaySaveCookie: {
+        case AlipayIntentActions.AlipaySaveCookie: {
           String cookie = intent.getStringExtra("alipaycookie");
           PayHelperUtils.updateAlipayCookie(mActivity, cookie);
           break;
         }
 
-        case IntentActions.AppLoginIdReceived: {
+        case AlipayIntentActions.AppLoginIdReceived: {
           String type = intent.getStringExtra("type");
           String loginid = intent.getStringExtra("loginid");
           if (TextUtils.isEmpty(loginid)) break;
@@ -139,12 +130,12 @@ public class CommonActionReceiver extends BroadcastReceiver {
           break;
         }
 
-        case IntentActions.AppTradeNoReceived: {
+        case AlipayIntentActions.AppTradeNoReceived: {
           // 商家服务
           final String tradeno = intent.getStringExtra("tradeno");
           String cookie = intent.getStringExtra("cookie");
 
-          final AlipayDataCache dbManager = new AlipayDataCache(App.getInstance().getApplicationContext());
+          final AlipayDataCache dbManager = new AlipayDataCache(context);
           if (!dbManager.isExistTradeNo(tradeno)) {
             dbManager.addTradeNo(tradeno, "0");
             String url = "https://tradeeportlet.alipay.com/wireless/tradeDetail.htm?tradeNo=" + tradeno + "&source=channel&_from_url=https%3A%2F%2Frender.alipay.com%2Fp%2Fz%2Fmerchant-mgnt%2Fsimple-order._h_t_m_l_%3Fsource%3Dmdb_card";
@@ -178,13 +169,13 @@ public class CommonActionReceiver extends BroadcastReceiver {
                       collectUpCallback("alipay", tradeno, money, mark, dt);
                     }
                   } catch (Exception e) {
-                    PayHelperUtils.sendMsg(context, "IntentActions.AppTradeNoReceived-->>onSuccess异常" + e.getMessage());
+                    PayHelperUtils.sendMsg(context, "AlipayIntentActions.AppTradeNoReceived-->>onSuccess异常" + e.getMessage());
                   }
                 }
               });
               */
             } catch (Exception e) {
-              PayHelperUtils.sendMsg(context, "IntentActions.TRADE_NO_RECEIVED异常" + e.getMessage());
+              PayHelperUtils.sendMsg(context, "AlipayIntentActions.TRADE_NO_RECEIVED异常" + e.getMessage());
             }
           } else {
             // MainActivity.logTrace("出现重复流水号，疑似掉单，5秒后自动补单");
@@ -197,7 +188,7 @@ public class CommonActionReceiver extends BroadcastReceiver {
           break;
         }
 
-        case IntentActions.GetTradeInfo: {
+        case AlipayIntentActions.GetTradeInfo: {
           new Handler().postDelayed(new Runnable() {
             public void run() {
               PayHelperUtils.getTradeInfo2(context);
@@ -220,7 +211,7 @@ public class CommonActionReceiver extends BroadcastReceiver {
 
       if (TextUtils.isEmpty(notifyUrl) || TextUtils.isEmpty(signKey)) {
         // MainActivity.logTrace("发送异步通知异常，异步通知地址或密钥为空");
-        update(no, "异步通知地址或密钥为空");
+        // update(no, "异步通知地址或密钥为空");
         return;
       }
 
@@ -286,7 +277,7 @@ public class CommonActionReceiver extends BroadcastReceiver {
 
   // 更新本地订单状态
   private void update(String no, String result) {
-    AlipayDataCache dbManager = new AlipayDataCache(App.getInstance().getApplicationContext());
+    AlipayDataCache dbManager = new AlipayDataCache(null);
     dbManager.updateOrder(no, result);
   }
 }

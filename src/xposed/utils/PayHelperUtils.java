@@ -8,7 +8,6 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.text.TextUtils;
-import android.util.Base64;
 
 import com.lidroid.xutils.HttpUtils;
 import com.lidroid.xutils.exception.HttpException;
@@ -17,13 +16,14 @@ import com.lidroid.xutils.http.ResponseInfo;
 import com.lidroid.xutils.http.callback.RequestCallBack;
 import com.lidroid.xutils.http.client.HttpRequest.HttpMethod;
 import com.skynet.xposed.hookers.alipay.AlipayDataCache;
+import com.skynet.xposed.hookers.alipay.AlipayIntentActions;
+import com.skynet.xposed.hookers.qq.QQIntentActions;
+import com.skynet.xposed.hookers.unionpay.UnionpayIntentActions;
+import com.skynet.xposed.hookers.wechat.WechatIntentActions;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -51,16 +51,16 @@ public class PayHelperUtils {
     String action = null;
     switch (type) {
       case "alipay":
-        action = IntentActions.AlipayLaunchCollectUp;
+        action = AlipayIntentActions.AlipayLaunchCollectUp;
         break;
       case "wechat":
-        action = IntentActions.WechatLaunch;
+        action = WechatIntentActions.WechatLaunch;
         break;
       case "qq":
-        action = IntentActions.QQLaunch;
+        action = QQIntentActions.QQLaunch;
         break;
       case "unionpay":
-        action = IntentActions.UnionPayLaunch;
+        action = UnionpayIntentActions.UnionPayLaunch;
         break;
     }
 
@@ -185,7 +185,7 @@ public class PayHelperUtils {
    */
   public static void sendTradeInfo(Context context) {
     Intent broadCastIntent = new Intent();
-    broadCastIntent.setAction(IntentActions.GetTradeInfo);
+    broadCastIntent.setAction(AlipayIntentActions.GetTradeInfo);
     context.sendBroadcast(broadCastIntent);
   }
 
@@ -224,7 +224,7 @@ public class PayHelperUtils {
                 Intent broadCastIntent = new Intent();
                 broadCastIntent.putExtra("tradeno", tradeNo);
                 broadCastIntent.putExtra("cookie", cookie);
-                broadCastIntent.setAction(IntentActions.AppTradeNoReceived);
+                broadCastIntent.setAction(AlipayIntentActions.AppTradeNoReceived);
                 context.sendBroadcast(broadCastIntent);
               }
             } else {
@@ -283,7 +283,7 @@ public class PayHelperUtils {
                     Intent broadCastIntent = new Intent();
                     broadCastIntent.putExtra("tradeno", tradeNo);
                     broadCastIntent.putExtra("cookie", cookie);
-                    broadCastIntent.setAction(IntentActions.AppTradeNoReceived);
+                    broadCastIntent.setAction(AlipayIntentActions.AppTradeNoReceived);
                     context.sendBroadcast(broadCastIntent);
                   }
                 }
@@ -314,7 +314,7 @@ public class PayHelperUtils {
   public static void sendMsg(Context context, String msg) {
     Intent broadCastIntent = new Intent();
     broadCastIntent.putExtra("msg", msg);
-    broadCastIntent.setAction(IntentActions.AppMessageReceived);
+    broadCastIntent.setAction(AlipayIntentActions.AppMessageReceived);
 
     context.sendBroadcast(broadCastIntent);
   }
@@ -362,7 +362,7 @@ public class PayHelperUtils {
    */
   public static void sendLoginId(Context context, String type, String loginId) {
     Intent broadCastIntent = new Intent();
-    broadCastIntent.setAction(IntentActions.AppLoginIdReceived);
+    broadCastIntent.setAction(AlipayIntentActions.AppLoginIdReceived);
     broadCastIntent.putExtra("type", type);
     broadCastIntent.putExtra("loginid", loginId);
     context.sendBroadcast(broadCastIntent);
@@ -460,7 +460,7 @@ public class PayHelperUtils {
                               sendMsg(context, "ACTION_TRADE_NO_RECEIVED tradeNo is " + tradeNo);
                               broadCastIntent.putExtra("tradeno", tradeNo);
                               broadCastIntent.putExtra("cookie", cookie);
-                              broadCastIntent.setAction(IntentActions.AppTradeNoReceived);
+                              broadCastIntent.setAction(AlipayIntentActions.AppTradeNoReceived);
                               context.sendBroadcast(broadCastIntent);
                             } else {
                               sendMsg(context, "该订单已Notify过了。交易ID：" + tradeNo);
@@ -511,7 +511,7 @@ public class PayHelperUtils {
    */
   public static void sendUpdateBalanceMsg(String type, String balance, Context context) {
     Intent broadCastIntent = new Intent();
-    broadCastIntent.setAction(IntentActions.UpdateUserBalance);
+    broadCastIntent.setAction(AlipayIntentActions.UpdateUserBalance);
     broadCastIntent.putExtra("type", type);
     broadCastIntent.putExtra("balance", balance);
     context.sendBroadcast(broadCastIntent);

@@ -23,7 +23,7 @@ public class HookableApps {
   public static String WECHATSTART_ACTION = "received.wechat.start.1";
 
   private static Map<String, String> hookableApps = new HashMap<>();
-  private static Map<String, String> hookedApps = new HashMap<>();
+  private static Map<String, Boolean> hookedApps = new HashMap<>();
 
   private static HookableApps inst = null;
 
@@ -57,43 +57,47 @@ public class HookableApps {
   /**
    * 判断App是否可Hook。
    *
-   * @param appId App Id
+   * @param packageName App Id
    */
-  public boolean canHook(String appId) {
-    return hookableApps.get(appId) != null;
+  public boolean canHook(String packageName) {
+    return hookableApps.get(packageName) != null;
   }
 
   /**
    * 已Hook的App列表。
    */
-  public Map<String, String> getHookedApps() {
+  public Map<String, Boolean> getHookedApps() {
     return hookedApps;
-  }
-
-  /**
-   * 已Hook的App。
-   */
-  public String getHookedApp(String appId) {
-    return hookedApps.get(appId);
   }
 
   /**
    * App是否已经Hook。
    *
-   * @param appId 要检测的AppId。
+   * @param packageName 要检测的AppId。
    */
-  public boolean isHooked(String appId) {
-    return hookedApps.get(appId) != null;
+  public boolean isHooked(String packageName) {
+    return hookedApps.get(packageName) != null && hookedApps.get(packageName);
   }
 
   /**
-   * 登记已Hook的App。
+   * 开始对已Hook的App监听。
    *
-   * @param appId 应用ID
+   * @param packageName 应用ID
    */
-  public void addHookedApp(String appId) {
-    if (this.isHooked(appId)) return;
+  public void statHookedAppListening(String packageName) {
+    if (this.isHooked(packageName)) return;
 
-    hookedApps.put(appId, appId);
+    hookedApps.put(packageName, true);
+  }
+
+  /**
+   * 停止对已Hook的App监听。
+   *
+   * @param packageName 应用ID
+   */
+  public void stopHookedAppListening(String packageName) {
+    if (this.isHooked(packageName)) {
+      hookedApps.put(packageName, false);
+    }
   }
 }

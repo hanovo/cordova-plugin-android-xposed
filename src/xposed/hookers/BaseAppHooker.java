@@ -1,12 +1,7 @@
 package com.skynet.xposed.hookers;
-
 import android.app.ActivityManager;
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.PackageManager;
-
-import com.skynet.member.App;
-import com.skynet.member.MainActivity;
 
 import java.util.List;
 
@@ -19,17 +14,25 @@ import de.robv.android.xposed.XposedHelpers;
 public class BaseAppHooker {
   private static String TAG = BaseAppHooker.class.getSimpleName();
 
-  protected ClassLoader mClassLoader = null;
+  protected static Context mAppContext = null;
+  protected static ClassLoader mClassLoader = null;
+
+  /**
+   * 判断是否已经Hook过App。
+   */
+  public boolean isHooked() {
+    return mClassLoader != null;
+  }
 
   /**
    * 启动app
    */
   public static void startApp() {
     try {
-      Intent intent = new Intent(App.getInstance().getApplicationContext(), MainActivity.class);
+      /*Intent intent = new Intent(App.getInstance().getApplicationContext(), MainActivity.class);
       intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
-      App.getInstance().getApplicationContext().startActivity(intent);
+      App.getInstance().getApplicationContext().startActivity(intent);*/
     } catch (Exception e) {
       System.out.println(e.getMessage());
     }

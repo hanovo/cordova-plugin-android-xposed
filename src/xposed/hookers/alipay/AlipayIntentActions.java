@@ -1,10 +1,11 @@
-package com.skynet.xposed.utils;
+package com.skynet.xposed.hookers.alipay;
 
 /**
- * Intent 操作。
+ * 支付宝数据传输操作。
  */
-public class IntentActions {
-  public static final String AppBillReceived = "com.tools.payhelper.billreceived";
+public class AlipayIntentActions {
+  public static final String AppBillReceived = "com.skynet.xposed.alipay.billreceived";
+
   public static final String AppQrCodeReceived = "com.tools.payhelper.qrcodereceived";
   public static final String AppMessageReceived = "com.tools.payhelper.msgreceived";
   public static final String AppTradeNoReceived = "com.tools.payhelper.tradenoreceived";
@@ -18,10 +19,4 @@ public class IntentActions {
   public static final String AlipayLaunchCollectUp = "com.payhelper.alipay.launchAppToCollectUp";
   public static final String AlipaySaveCookie = "com.tools.payhelper.savealipaycookie";
   public static final String AlipaySetData = "com.payhelper.alipay.setData";
-
-  public static final String UnionPayLaunch = "com.colin.union.start";
-
-  public static final String QQLaunch = "com.payhelper.qq.start";
-
-  public static final String WechatLaunch = "com.payhelper.wechat.start";
 }

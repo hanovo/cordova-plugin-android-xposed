@@ -12,19 +12,24 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
  * XPosed入口
  */
 public class XposedMain implements IXposedHookLoadPackage {
+  private static boolean isAlipayHooked = false;
+  
   @Override
-  public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) throws Throwable {
+  public void handleLoadPackage(XC_LoadPackage.LoadPackageParam param) throws Throwable {
     // 过滤系统应用
-    if (lpparam.appInfo == null || (lpparam.appInfo.flags & (ApplicationInfo.FLAG_SYSTEM | ApplicationInfo.FLAG_UPDATED_SYSTEM_APP)) != 0) {
+    if (param.appInfo == null || (param.appInfo.flags & (ApplicationInfo.FLAG_SYSTEM | ApplicationInfo.FLAG_UPDATED_SYSTEM_APP)) != 0) {
       return;
     }
 
     // 忽略不可Hook的App
-    if (!HookableApps.inst().canHook(lpparam.packageName)) return;
+    if (!HookableApps.inst().canHook(param.packageName)) return;
 
-    switch (lpparam.packageName) {
+    switch (param.packageName) {
       case HookableApps.PackageAlipay:
-        AlipayHooker.inst().hook(lpparam);
+        if (!isAlipayHooked) {
+          isAlipayHooked = true;
+          AlipayHooker.inst().hook(param);
+        }
         break;
 
       case HookableApps.PackageUnionpay:
@@ -38,7 +43,7 @@ public class XposedMain implements IXposedHookLoadPackage {
     }
 
     /*
-    XposedHelpers.findAndHookMethod("com.example.basic.MainActivity", lpparam.classLoader, "createNewTitle", String.class, new XC_MethodHook() {
+    XposedHelpers.findAndHookMethod("com.example.basic.MainActivity", param.classLoader, "createNewTitle", String.class, new XC_MethodHook() {
       @Override
       protected void beforeHookedMethod(XC_MethodHook.MethodHookParam param) throws Throwable {
         XposedBridge.log("param is: " + param.args[0]);

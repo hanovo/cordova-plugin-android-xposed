@@ -6,8 +6,6 @@ import android.content.Context;
 import android.content.Intent;
 
 
-import com.skynet.xposed.utils.IntentActions;
-
 import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedHelpers;
 
@@ -16,9 +14,6 @@ import de.robv.android.xposed.XposedHelpers;
  */
 public class AlipayReceiver extends BroadcastReceiver {
   private static String TAG = AlipayReceiver.class.getSimpleName();
-
-  public static String mSignKey = "";       // 支付宝密钥
-  public static String mCallbackUrl = "";   // 回调地址
 
   /**
    * 处理接收到的事件。
@@ -31,7 +26,7 @@ public class AlipayReceiver extends BroadcastReceiver {
     XposedBridge.log(TAG + ": 支付宝启动");
 
     switch (intent.getAction()) {
-      case IntentActions.AlipayLaunchCollectUp: {
+      case AlipayIntentActions.AlipayLaunchCollectUp: {
         String mark = intent.getStringExtra("mark");
         final String money = intent.getStringExtra("money");
         if (mark.contains("---")) {
@@ -52,7 +47,7 @@ public class AlipayReceiver extends BroadcastReceiver {
                     broadCastIntent.putExtra("mark", remark + "---" + uid);
                     broadCastIntent.putExtra("type", "alipay");
                     broadCastIntent.putExtra("payurl", res);
-                    broadCastIntent.setAction(IntentActions.AppQrCodeReceived);
+                    broadCastIntent.setAction(AlipayIntentActions.AppQrCodeReceived);
                     context.sendBroadcast(broadCastIntent);
                   }
                 });
@@ -71,11 +66,7 @@ public class AlipayReceiver extends BroadcastReceiver {
       }
 
       default: {
-        mSignKey = intent.getStringExtra("sign");
-        mCallbackUrl = intent.getStringExtra("callbackUrl");
-
-        String txt = "sign key: " + mSignKey + ", callback url: " + mCallbackUrl;
-        XposedBridge.log(txt);
+        XposedBridge.log("111");
 
         break;
       }

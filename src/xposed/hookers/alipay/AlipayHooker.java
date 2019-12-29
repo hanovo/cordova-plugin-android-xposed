@@ -2,6 +2,7 @@ package com.skynet.xposed.hookers.alipay;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -15,8 +16,6 @@ import android.util.Base64;
 import com.alibaba.fastjson.JSON;
 import com.skynet.xposed.hookers.BaseAppHooker;
 import com.skynet.xposed.hookers.HookableApps;
-import com.skynet.xposed.utils.IntentActions;
-import com.skynet.xposed.utils.PayHelperUtils;
 import com.skynet.xposed.utils.StringUtils;
 
 import org.json.JSONArray;
@@ -45,7 +44,6 @@ public class AlipayHooker extends BaseAppHooker {
   private static AlipayHooker inst = null;
   private static List<Bundle> bundleList = new ArrayList<>();
 
-  private Activity mAlipayActivity = null;
   private Handler deleteContactHandler = null;  // 好删除消息处理器
 
   /**
@@ -68,31 +66,29 @@ public class AlipayHooker extends BaseAppHooker {
   /**
    * App Hook。
    */
-  public void hook(XC_LoadPackage.LoadPackageParam lpparam) throws Throwable {
+  public void hook(XC_LoadPackage.LoadPackageParam lpParam) throws Throwable {
     try {
-      if (com.skynet.xposed.hookers.HookableApps.inst().isHooked(HookableApps.PackageAlipay)) return;
+      if (HookableApps.inst().isHooked(HookableApps.PackageAlipay)) return;
 
-      XposedHelpers.findAndHookMethod(Activity.class, "onCreate", Bundle.class, new XC_MethodHook() {
+      HookableApps.inst().statHookedAppListening(HookableApps.PackageAlipay);
+
+      XposedBridge.log(TAG + ": 即将开始Hook支付宝...");
+      XposedHelpers.findAndHookMethod(Application.class, "attach", Context.class, new XC_MethodHook() {
         @Override
         protected void afterHookedMethod(XC_MethodHook.MethodHookParam param) throws Throwable {
           super.afterHookedMethod(param);
 
-          AlipayHooker.this.mAlipayActivity = (Activity) param.thisObject;
-          XposedBridge.log(TAG + ": 当前 Activity 为 " + mAlipayActivity.getClass().toString());
+          Context appContext = (Context)param.args[0];
+          AlipayHooker.mAppContext = appContext;
+          AlipayHooker.mClassLoader = appContext.getClassLoader();
 
-          // 若非支付宝未登录页面，直接返回
-          String cm = mAlipayActivity.getClass().getSimpleName();
-          if (!cm.equals("AlipayLogin")) return;
-
-          AlipayHooker.this.mClassLoader = mAlipayActivity.getClassLoader();
-
-          // 在支付宝首页，注册广播事件接收器
+          // 在支付宝应用上下文对象上注册广播接收器
           IntentFilter intentFilter = new IntentFilter();
-          intentFilter.addAction(IntentActions.AlipayLaunchCollectUp);
-          intentFilter.addAction(IntentActions.AlipaySetData);
+          intentFilter.addAction(AlipayIntentActions.AlipayLaunchCollectUp);
+          intentFilter.addAction(AlipayIntentActions.AlipaySetData);
 
           AlipayReceiver alipayReceiver = new AlipayReceiver();
-          mAlipayActivity.registerReceiver(alipayReceiver, intentFilter);
+          AlipayHooker.mAppContext.registerReceiver(alipayReceiver, intentFilter);
 
           // Hook前安全检查
           securityCheckHook();
@@ -100,27 +96,28 @@ public class AlipayHooker extends BaseAppHooker {
           // timer.schedule(task, 0, 1000);
 
           // 注册一个处理器，用于删除好友
-          registerDeleteContactHandler();
-
-          XposedBridge.log(TAG + ": 开始支付宝Hook...");
+          // registerDeleteContactHandler();
 
           // Hook TradeDao 插入方法(即到账的时候执行)
           AlipayHooker.this.hookTradeDaoInsertMessageInfo();
 
+          // Hook 消息数据库插入方法（监听到账消息）
+          // AlipayHooker.this.hookMessageBoxServiceDaoInsertMessageInfo();
+
           // Hook 私聊 Activity
-          AlipayHooker.this.hookPrivateChatActivity();
+          // AlipayHooker.this.hookPrivateChatActivity();
 
           // Hook 通用消息创建方法
-          AlipayHooker.this.hookCommonMessageCreation();
+          // AlipayHooker.this.hookCommonMessageCreation();
 
           // Hook 聊天回调类，此处包含主动收款
-          AlipayHooker.this.hookReceiveChatMessage();
+          // AlipayHooker.this.hookReceiveChatMessage();
 
           // 红包详情
-          AlipayHooker.this.hookRedpacketInfo();
+          // AlipayHooker.this.hookRedpacketInfo();
 
           // Accessibility
-          AlipayHooker.this.hookSnsCouponDetailActivity();
+          // AlipayHooker.this.hookSnsCouponDetailActivity();
 
           // Hook 聊天对象类(针对红包的)
           /*
@@ -134,44 +131,91 @@ public class AlipayHooker extends BaseAppHooker {
           final Class<?> A = AlipayHooker.this.findClass("com.alipay.android.phone.discovery.envelope.ui.util.a", classLoader);
           */
 
-          com.skynet.xposed.hookers.HookableApps.inst().addHookedApp(HookableApps.PackageAlipay);
-
-          String versionName = AlipayHooker.this.getAppVersion(AlipayHooker.this.mAlipayActivity);
+          String versionName = AlipayHooker.this.getAppVersion(AlipayHooker.mAppContext);
           XposedBridge.log(TAG + ": 支付宝Hook成功，版本: " + versionName);
-          // PayHelperUtils.sendMsg(mAlipayActivity, "支付宝Hook成功，版本: " + versionName);
+          // PayHelperUtils.sendMsg(mAppContext, "支付宝Hook成功，版本: " + versionName);
         }
       });
     } catch (Throwable e) {
-      XposedBridge.log("[支付宝Hook]失败:(" + e.getMessage());
+      XposedBridge.log(TAG + ": 支付宝Hook失败。" + e.getMessage());
     }
+  }
 
-    /* 另一个版本的Hook过程
-    if (lpparam.appInfo != null && (lpparam.appInfo.flags & 129) == 0) {
-      try {
-        String processName = lpparam.processName;
-        XposedHelpers.findAndHookMethod(Application.class, "attach", new Object[]{Context.class, new XC_MethodHook(processName) {
-          protected void afterHookedMethod(MethodHookParam arg5) throws Throwable {
-            super.afterHookedMethod(arg5);
-            Object v5 = arg5.args[0];
-            HookMain.ALIHOOK_CONTEXT = ((Context) v5);
-            ClassLoader packageName = ((Context) v5).getClassLoader();
-            if ((HookableApps.PackageAlipay.equals(this.val$processName)) && !HookMain.this.ALIPAY_PACKAGE_ISHOOK) {
-              HookMain.this.ALIPAY_PACKAGE_ISHOOK = true;
-              AlipayReceived v1 = new AlipayReceived(HookMain.this);
-              IntentFilter v2 = new IntentFilter();
-              v2.addAction("com.alipay.kouling");
-              ((Context) v5).registerReceiver(((BroadcastReceiver) v1), v2);
-              new AlipayHook().hook(packageName, ((Context) v5));
-              PayHelperUtils.sendmsg(((Context) v5), "支付宝Hook成功，当前版本:" + PayHelperUtils.getVerName(((Context) v5)));
+  /**
+   * Hook 消息插入操作。
+   */
+  public void hookMessageBoxServiceDaoInsertMessageInfo() {
+    try {
+      XposedBridge.log(TAG + ": Hook 支付宝 MessageBoxServiceDao.insertMessageInfo 开始...");
+
+      String ServiceInfoClassName = "com.alipay.android.phone.messageboxstatic.biz.db.ServiceInfo";
+      Class<?> ServiceInfo = XposedHelpers.findClass(ServiceInfoClassName, AlipayHooker.mClassLoader);
+
+      String ServiceDaoClassName = "com.alipay.android.phone.messageboxstatic.biz.dao.ServiceDao";
+      XposedHelpers.findAndHookMethod(ServiceDaoClassName, AlipayHooker.mClassLoader, "insertMessageInfo", ServiceInfo, String.class, new XC_MethodHook() {
+        @Override
+        protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+          try {
+            String message = (String)XposedHelpers.callMethod(param.args[0], "toString", new Object[0]);
+            XposedBridge.log(TAG + ": 支付宝收到支付订单消息: " + message);
+
+            String extraInfo = StringUtils.getTextCenter(message, "extraInfo=\'", "\'").replace("\\", "");
+            XposedBridge.log(TAG + ": 订单消息 extraInfo: " + extraInfo);
+
+            /*String channelName = Channel.ALIPAY_QRCODE_FIX.getCode();
+            String timeStamp = String.valueOf(System.currentTimeMillis());
+            extraInfo = extraInfo.replace("\"bizMonitor\":\"", "\"bizMonitor\":").replace("}\",\"cardLink\"", "},\"cardLink\"");
+            if((extraInfo.contains("你的银行卡")) || (extraInfo.contains("通过支付宝"))) {
+              String v0_1 = PayUtils.getMidText(extraInfo, "转账", "元已到账");
+              extraInfo = PayUtils.getMidText(extraInfo, "{\"assistMsg1\":\"", "通过支付宝");
+              Log.d("arik", "支付宝收到支付订单======" + v0_1 + " mark==" + extraInfo);
+              channelName = Channel.ALIPAY_NEW_ZK.getCode();
+              extraInfo = v0_1;
+            } else if(extraInfo.contains("店员通")) {
+              channelName = Channel.ALIPAY_DY.getCode();
+              timeStamp = StringUtils.getTextCenter(extraInfo, "mainAmount\":\"", "\",\"mainTitle");
+              SimpleDateFormat v3 = new SimpleDateFormat("yyyyMMdd");
+              extraInfo = JSON.parseObject(extraInfo).getString("assistMsg1");
+              extraInfo = extraInfo.substring(0, extraInfo.indexOf("收款") + 1);
+              StringBuilder v0 = new StringBuilder();
+              v0.append(v3.format(new Date()));
+              v0.append(extraInfo);
+              v0.append(timeStamp);
+              String v5 = timeStamp;
+              timeStamp = v0.toString();
+              extraInfo = v5;
+            } else {
+              JSONObject v7_2 = JSON.parseObject(extraInfo);
+              JSON.parseObject(v7_2.getString("bizMonitor"));
+              extraInfo = v7_2.getString("content");
+              if(!extraInfo.contains("收款金额￥")) {
+                Log.d("arik", "统计的支付消息，忽略..");
+                return;
+              } else {
+                extraInfo = extraInfo.replace("收款金额￥", "");
+              }
             }
+
+            Intent v0_2 = new Intent();
+            v0_2.putExtra("bill_no", timeStamp);
+            v0_2.putExtra("bill_money", extraInfo);
+            v0_2.putExtra("bill_mark", "");
+            v0_2.putExtra("bill_time", System.currentTimeMillis());
+            v0_2.putExtra("bill_type", channelName);
+            v0_2.setAction(SealAppContext.BILLRECEIVED_ACTION);
+            this.val$context.sendBroadcast(v0_2);*/
+          } catch(Exception e) {
+            e.printStackTrace();
+
+            XposedBridge.log(TAG + ": 处理支付宝收到支付订单消息出错。" + e.getMessage());
           }
-        }});
-      } catch (Throwable v6_1) {
-        Log.d(TAG, "[ERR]: Hook支付宝错误：" + v6_1.getMessage());
-        Context v0_1 = HookMain.ALIHOOK_CONTEXT;
-        PayHelperUtils.sendmsg(v0_1, "Hook支付宝错误：" + v6_1.getMessage());
-      }
-    }*/
+        }
+      });
+
+      XposedBridge.log(TAG + ": Hook 支付宝 MessageBoxServiceDao.insertMessageInfo 完成。");
+    } catch (Exception e) {
+      XposedBridge.log(TAG + ": Hook支付宝 MessageBoxServiceDao.insertMessageInfo 失败。" + e);
+    }
   }
 
   /**
@@ -181,7 +225,7 @@ public class AlipayHooker extends BaseAppHooker {
    */
   public void hookTradeDaoInsertMessageInfo() {
     try {
-      XposedBridge.log(TAG + ": 开始Hook支付宝交易记录插入方法 TradeDao.insertMessageInfo...");
+      XposedBridge.log(TAG + ": Hook支付宝交易记录插入方法 TradeDao.insertMessageInfo 开始...");
 
       Class<?> tradeDaoCls = AlipayHooker.this.findClass("com.alipay.android.phone.messageboxstatic.biz.dao.TradeDao");
       XposedBridge.hookAllMethods(tradeDaoCls, "insertMessageInfo", new XC_MethodHook() {
@@ -189,22 +233,20 @@ public class AlipayHooker extends BaseAppHooker {
         protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
           try {
             // 获取全部字段
-            Object object = param.args[0];
-            XposedBridge.log(TAG + ": Hook支付宝交易记录插入方法 TradeDao.insertMessageInfo，参数为 " + JSON.toJSONString(object));
+            Object firstParam = param.args[0];
+            String data = JSON.toJSONString(firstParam);
+            XposedBridge.log(TAG + ": TradeDao.insertMessageInfo 第一个参数为 " + data);
 
-            // PayHelperUtils.sendMsg(context, (String) XposedHelpers.getObjectField(param.args[0], "content"));
-
-            String content = (String) XposedHelpers.callMethod(object, "toString");
-            if (content.contains("收款到账")) {
-              JSONObject jsonObject = new JSONObject(JSON.toJSONString(object));
-              JSONObject contentJson = new JSONObject(jsonObject.getString("content"));
-              String fromUserId = jsonObject.optString("userId");
-              String receiveAmount = contentJson.getString("content").replace("￥", "");
+            if (data.contains("收款到账")) {
+              JSONObject paramJson = new JSONObject(data);
+              JSONObject contentJson = new JSONObject(paramJson.getString("content"));
+              String fromUserId = paramJson.optString("userId");
               String remark = contentJson.getString("assistMsg2");
-              String alipayMsgId = jsonObject.optString("msgId");
-              XposedBridge.log(TAG + ": TradeDao.insertMessageInfo 订单ID: " + remark + "，发送者userId: " + fromUserId);
+              String receiveAmount = contentJson.getString("content").replace("￥", "");
+              String alipayMsgId = paramJson.optString("msgId");
+              XposedBridge.log(TAG + ": TradeDao.insertMessageInfo 订单ID: " + remark + "，付款方userId: " + fromUserId);
 
-              // todo: 回调
+              // todo: 主动收款回调
               /*
               final String mNotifyUrl = CommonUtil.readConfigFromFile("callbackUrl", "");
               String mSignToken = CommonUtil.readConfigFromFile("signToken", "");
@@ -225,16 +267,13 @@ public class AlipayHooker extends BaseAppHooker {
               httpUtils.send(HttpRequest.HttpMethod.POST, mNotifyUrl, params, new RequestCallBack<String>() {
                 @Override
                 public void onFailure(HttpException arg0, String arg1) {
-                  // PayHelperUtils.sendMsg(context, "[支付宝Hook]收款回调失败：" + arg1);
-                  XposedBridge.log(TAG + ": 收款回调失败。" + arg1);
+                  XposedBridge.log(TAG + ": 主动收款回调失败。" + arg1);
                 }
 
                 @Override
                 public void onSuccess(ResponseInfo<String> res) {
                   String data = res.result;
-
-                  // PayHelperUtils.sendMsg(context, "[支付宝Hook]收款回调成功：" + data);
-                  XposedBridge.log(TAG + ": 收款回调成功。" + data);
+                  XposedBridge.log(TAG + ": 主动收款回调成功。" + data);
                 }
               });*/
             }
@@ -259,7 +298,7 @@ public class AlipayHooker extends BaseAppHooker {
    */
   public void hookPrivateChatActivity() {
     try {
-      XposedBridge.log(TAG + ": Hook私聊 Activity 开始...");
+      XposedBridge.log(TAG + ": Hook 私聊 Activity 开始...");
 
       Class<?> PersonalChatMsgActivity_ = AlipayHooker.this.findClass("com.alipay.mobile.chatapp.ui.PersonalChatMsgActivity_");
       XposedHelpers.findAndHookMethod(PersonalChatMsgActivity_, "onCreate", Bundle.class, new XC_MethodHook() {
@@ -276,7 +315,7 @@ public class AlipayHooker extends BaseAppHooker {
         }
       });
 
-      XposedBridge.log(TAG + ": Hook私聊 Activity 完成。");
+      XposedBridge.log(TAG + ": Hook 私聊 Activity 完成。");
     } catch (Exception e) {
       XposedBridge.log(TAG + ": 获取支付宝联系人账号失败。" + e);
     }
@@ -395,7 +434,7 @@ public class AlipayHooker extends BaseAppHooker {
               } else if (alipayBizType.equals("GIFTSHARE")) {
                 // 礼物？
                 Class<?> snsCou = AlipayHooker.this.findClass("com.alipay.android.phone.discovery.envelope.get.SnsCouponDetailActivity");
-                Intent envIntent = new Intent(mAlipayActivity, snsCou);
+                Intent envIntent = new Intent(mAppContext, snsCou);
 
                 Bundle bundle = new Bundle();
                 bundle.putString("chatUserId", fromUserId);
@@ -418,7 +457,7 @@ public class AlipayHooker extends BaseAppHooker {
                 bundle.putString("ap_framework_sceneId", ap_framework_sceneId);
 
                 bundleList.add(bundle);
-                PayHelperUtils.sendMsg(mAlipayActivity, bundleList.size() + "");
+                // todo: PayHelperUtils.sendMsg(mAppContext, bundleList.size() + "");
               }
             }
           });
@@ -657,7 +696,7 @@ public class AlipayHooker extends BaseAppHooker {
       ret.put("realName", realName);
       ret.put("userAvatar", userAvatar);
 
-      //PayHelperUtils.sendLoginId(((Map) v2), ((String) v0), ((String) v1), "alipay", arg8);
+      //PayHelperUtils.sendLoginId(((Map) v2), ((String) v0), ((String) channelName), "alipay", arg8);
       XposedBridge.log(TAG + ": 获取用户登录信息成功。" + JSON.toJSONString(ret));
 
       return ret;
