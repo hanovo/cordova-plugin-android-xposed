@@ -76,7 +76,10 @@ public class HookableApps {
    * @param packageName 要检测的AppId。
    */
   public boolean isHooked(String packageName) {
-    return hookedApps.get(packageName) != null && hookedApps.get(packageName);
+    Boolean value = hookedApps.get(packageName);
+    if (value == null) return false;
+
+    return value;
   }
 
   /**

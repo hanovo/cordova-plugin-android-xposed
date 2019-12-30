@@ -2,11 +2,12 @@ package com.skynet.xposed.cordova.plugin;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Looper;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.alibaba.fastjson.JSON;
 import com.skynet.xposed.hookers.HookableApps;
-import com.skynet.xposed.hookers.alipay.AlipayHooker;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
@@ -24,6 +25,8 @@ public class XPosedPluginEntry extends CordovaPlugin {
   private boolean isPaused;
   private CallbackContext callbackContext;
   private static final String TAG = XPosedPluginEntry.class.getSimpleName();
+
+  private Map<String, Object> alipayUserInfo;
 
   @Override
   public void onPause(boolean multitasking) {
@@ -44,7 +47,10 @@ public class XPosedPluginEntry extends CordovaPlugin {
    */
   @Override
   public boolean execute(String action, JSONArray args, final CallbackContext callbackContext) throws JSONException {
-    Log.i(TAG, "收到动作: " + action);
+    if (action.equals("startApp")) {
+      Toast toast = Toast.makeText(webView.getContext(), "正在启动App...", Toast.LENGTH_LONG);
+      toast.show();
+    }
 
     cordova.getThreadPool().execute(new Runnable() {
       @Override
@@ -100,11 +106,6 @@ public class XPosedPluginEntry extends CordovaPlugin {
   protected void startApp(JSONArray args, CallbackContext callbackContext) throws JSONException {
     try {
       String packageName = args.get(0).toString();
-      if (packageName.equals(HookableApps.PackageAlipay) && !AlipayHooker.inst().isHooked()) {
-        callbackContext.error("当前非XPosed环境或未启用XPosed插件，无法启动App");
-        return;
-      }
-
       Context context = webView.getContext();
       Intent intent = context.getPackageManager().getLaunchIntentForPackage(packageName);
       if (intent == null) return;
@@ -147,17 +148,38 @@ public class XPosedPluginEntry extends CordovaPlugin {
   protected void getLoginUserInfo(JSONArray args, CallbackContext callbackContext) throws JSONException {
     try {
       String packageName = args.get(0).toString();
-      if (!HookableApps.inst().isHooked(packageName)) {
+
+      boolean isHooked = HookableApps.inst().isHooked(packageName);
+      if (!isHooked) {
         throw new Exception("当前非XPosed环境或未启用XPosed插件，App尚未Hook");
       }
 
       if (packageName.equals(HookableApps.PackageAlipay)) {
-        Map<String, Object> userInfo = AlipayHooker.inst().getLoginUserInfo();
+        if (alipayUserInfo == null) {
+          throw new Exception("尚未获取到用户信息");
+        }
 
-        callbackContext.success(JSON.toJSONString(userInfo));
+        callbackContext.success(JSON.toJSONString(alipayUserInfo));
       } else {
         throw new Exception("不支持的App: " + packageName);
       }
+    } catch (Exception e) {
+      JSONObject err = new JSONObject();
+      err.put("message", e.getMessage());
+
+      callbackContext.error(err);
+    }
+  }
+
+  /**
+   * 获取日志.
+   */
+  protected void getLogs(JSONArray args, CallbackContext callbackContext) throws JSONException {
+    try {
+      String packageName = args.get(0).toString();
+
+      JSONArray logs = new JSONArray();
+      callbackContext.success(logs);
     } catch (Exception e) {
       JSONObject err = new JSONObject();
       err.put("message", e.getMessage());

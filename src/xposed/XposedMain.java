@@ -6,6 +6,7 @@ import com.skynet.xposed.hookers.HookableApps;
 import com.skynet.xposed.hookers.alipay.AlipayHooker;
 
 import de.robv.android.xposed.IXposedHookLoadPackage;
+import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 /**
@@ -17,7 +18,8 @@ public class XposedMain implements IXposedHookLoadPackage {
   @Override
   public void handleLoadPackage(XC_LoadPackage.LoadPackageParam param) throws Throwable {
     // 过滤系统应用
-    if (param.appInfo == null || (param.appInfo.flags & (ApplicationInfo.FLAG_SYSTEM | ApplicationInfo.FLAG_UPDATED_SYSTEM_APP)) != 0) {
+    if (param.appInfo == null || (param.appInfo.flags & (ApplicationInfo.FLAG_SYSTEM |
+        ApplicationInfo.FLAG_UPDATED_SYSTEM_APP)) != 0) {
       return;
     }
 
@@ -29,6 +31,8 @@ public class XposedMain implements IXposedHookLoadPackage {
         if (!isAlipayHooked) {
           isAlipayHooked = true;
           AlipayHooker.inst().hook(param);
+        } else {
+          XposedBridge.log("支付宝已经Hook过了，忽略");
         }
         break;
 

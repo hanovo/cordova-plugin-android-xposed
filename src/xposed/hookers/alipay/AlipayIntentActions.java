@@ -1,22 +1,15 @@
 package com.skynet.xposed.hookers.alipay;
 
 /**
- * 支付宝数据传输操作。
+ * 支付宝App操作事件。
  */
 public class AlipayIntentActions {
-  public static final String AppBillReceived = "com.skynet.xposed.alipay.billreceived";
+  // 发起主动收款
+  public static final String LaunchCollectUp = "com.skynet.xposed.alipay.launch.collect.up";
 
-  public static final String AppQrCodeReceived = "com.tools.payhelper.qrcodereceived";
-  public static final String AppMessageReceived = "com.tools.payhelper.msgreceived";
-  public static final String AppTradeNoReceived = "com.tools.payhelper.tradenoreceived";
-  public static final String AppLoginIdReceived = "com.tools.payhelper.loginidreceived";
-  public static final String Notify = "com.tools.payhelper.notify";
-  public static final String UpdateUserBalance = "com.tools.payhelper.updatebalance";
+  // 设置一些数据？
+  public static final String SetData = "com.skynet.xposed.alipay.set.data";
 
-  public static final String GetTradeInfo = "com.tools.payhelper.gettradeinfo";
-
-  public static final String AlipayLaunch = "com.payhelper.alipay.launchApp";
-  public static final String AlipayLaunchCollectUp = "com.payhelper.alipay.launchAppToCollectUp";
-  public static final String AlipaySaveCookie = "com.tools.payhelper.savealipaycookie";
-  public static final String AlipaySetData = "com.payhelper.alipay.setData";
+  // 获取指定的交易详情
+  public static final String GetTradeInfo = "com.skynet.xposed.alipay.get.trade.info";
 }

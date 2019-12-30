@@ -5,15 +5,16 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
+import com.skynet.xposed.cordova.plugin.PluginIntentActions;
 
 import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedHelpers;
 
 /**
- * 支付宝广播接收器。
+ * 支付宝操作广播接收器。
  */
-public class AlipayReceiver extends BroadcastReceiver {
-  private static String TAG = AlipayReceiver.class.getSimpleName();
+public class AlipayBroadcastReceiver extends BroadcastReceiver {
+  private static String TAG = AlipayBroadcastReceiver.class.getSimpleName();
 
   /**
    * 处理接收到的事件。
@@ -26,7 +27,8 @@ public class AlipayReceiver extends BroadcastReceiver {
     XposedBridge.log(TAG + ": 支付宝启动");
 
     switch (intent.getAction()) {
-      case AlipayIntentActions.AlipayLaunchCollectUp: {
+      // 启动主动收款
+      case AlipayIntentActions.LaunchCollectUp: {
         String mark = intent.getStringExtra("mark");
         final String money = intent.getStringExtra("money");
         if (mark.contains("---")) {
@@ -47,7 +49,7 @@ public class AlipayReceiver extends BroadcastReceiver {
                     broadCastIntent.putExtra("mark", remark + "---" + uid);
                     broadCastIntent.putExtra("type", "alipay");
                     broadCastIntent.putExtra("payurl", res);
-                    broadCastIntent.setAction(AlipayIntentActions.AppQrCodeReceived);
+                    broadCastIntent.setAction(PluginIntentActions.AppQrCodeReceived);
                     context.sendBroadcast(broadCastIntent);
                   }
                 });
@@ -66,8 +68,7 @@ public class AlipayReceiver extends BroadcastReceiver {
       }
 
       default: {
-        XposedBridge.log("111");
-
+        XposedBridge.log("未处理的支付宝操作事件");
         break;
       }
     }

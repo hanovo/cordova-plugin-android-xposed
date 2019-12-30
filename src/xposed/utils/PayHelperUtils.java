@@ -15,6 +15,7 @@ import com.lidroid.xutils.http.RequestParams;
 import com.lidroid.xutils.http.ResponseInfo;
 import com.lidroid.xutils.http.callback.RequestCallBack;
 import com.lidroid.xutils.http.client.HttpRequest.HttpMethod;
+import com.skynet.xposed.cordova.plugin.PluginIntentActions;
 import com.skynet.xposed.hookers.alipay.AlipayDataCache;
 import com.skynet.xposed.hookers.alipay.AlipayIntentActions;
 import com.skynet.xposed.hookers.qq.QQIntentActions;
@@ -51,7 +52,7 @@ public class PayHelperUtils {
     String action = null;
     switch (type) {
       case "alipay":
-        action = AlipayIntentActions.AlipayLaunchCollectUp;
+        action = AlipayIntentActions.LaunchCollectUp;
         break;
       case "wechat":
         action = WechatIntentActions.WechatLaunch;
@@ -224,7 +225,7 @@ public class PayHelperUtils {
                 Intent broadCastIntent = new Intent();
                 broadCastIntent.putExtra("tradeno", tradeNo);
                 broadCastIntent.putExtra("cookie", cookie);
-                broadCastIntent.setAction(AlipayIntentActions.AppTradeNoReceived);
+                broadCastIntent.setAction(PluginIntentActions.AlipayCookieFetched);
                 context.sendBroadcast(broadCastIntent);
               }
             } else {
@@ -283,7 +284,7 @@ public class PayHelperUtils {
                     Intent broadCastIntent = new Intent();
                     broadCastIntent.putExtra("tradeno", tradeNo);
                     broadCastIntent.putExtra("cookie", cookie);
-                    broadCastIntent.setAction(AlipayIntentActions.AppTradeNoReceived);
+                    // broadCastIntent.setAction(AlipayIntentActions.AlipayTradeNoFetched);
                     context.sendBroadcast(broadCastIntent);
                   }
                 }
@@ -314,7 +315,7 @@ public class PayHelperUtils {
   public static void sendMsg(Context context, String msg) {
     Intent broadCastIntent = new Intent();
     broadCastIntent.putExtra("msg", msg);
-    broadCastIntent.setAction(AlipayIntentActions.AppMessageReceived);
+    // broadCastIntent.setAction(AlipayIntentActions.AppMessageReceived);
 
     context.sendBroadcast(broadCastIntent);
   }
@@ -355,17 +356,6 @@ public class PayHelperUtils {
 
       return 0;
     }
-  }
-
-  /**
-   * 发送当前登录用户ID。
-   */
-  public static void sendLoginId(Context context, String type, String loginId) {
-    Intent broadCastIntent = new Intent();
-    broadCastIntent.setAction(AlipayIntentActions.AppLoginIdReceived);
-    broadCastIntent.putExtra("type", type);
-    broadCastIntent.putExtra("loginid", loginId);
-    context.sendBroadcast(broadCastIntent);
   }
 
   /**
@@ -460,7 +450,7 @@ public class PayHelperUtils {
                               sendMsg(context, "ACTION_TRADE_NO_RECEIVED tradeNo is " + tradeNo);
                               broadCastIntent.putExtra("tradeno", tradeNo);
                               broadCastIntent.putExtra("cookie", cookie);
-                              broadCastIntent.setAction(AlipayIntentActions.AppTradeNoReceived);
+                              broadCastIntent.setAction(PluginIntentActions.AlipayFetchTradeInfo);
                               context.sendBroadcast(broadCastIntent);
                             } else {
                               sendMsg(context, "该订单已Notify过了。交易ID：" + tradeNo);
@@ -504,17 +494,6 @@ public class PayHelperUtils {
   public static String getCurrentTimeMillis(Context context) {
     AlipayDataCache dbManager = new AlipayDataCache(context);
     return dbManager.getConfig("time");
-  }
-
-  /**
-   * 发送更新用户余额消息。
-   */
-  public static void sendUpdateBalanceMsg(String type, String balance, Context context) {
-    Intent broadCastIntent = new Intent();
-    broadCastIntent.setAction(AlipayIntentActions.UpdateUserBalance);
-    broadCastIntent.putExtra("type", type);
-    broadCastIntent.putExtra("balance", balance);
-    context.sendBroadcast(broadCastIntent);
   }
 
   /**

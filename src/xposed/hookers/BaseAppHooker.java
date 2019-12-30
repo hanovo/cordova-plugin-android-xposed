@@ -1,12 +1,18 @@
 package com.skynet.xposed.hookers;
+import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.pm.PackageManager;
+
+
+import com.skynet.xposed.hookers.alipay.AlipayBroadcastReceiver;
 
 import java.util.List;
 
 import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedHelpers;
+import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 /**
  * 钩子基类。
@@ -14,8 +20,13 @@ import de.robv.android.xposed.XposedHelpers;
 public class BaseAppHooker {
   private static String TAG = BaseAppHooker.class.getSimpleName();
 
+  @SuppressLint("StaticFieldLeak")
+  public static Activity mAlipayLauncherActivity = null;
+
   protected static Context mAppContext = null;
   protected static ClassLoader mClassLoader = null;
+  protected static AlipayBroadcastReceiver mAlipayBroadcastReceiver = null;
+  protected static XC_LoadPackage.LoadPackageParam m_lpparam = null;
 
   /**
    * 判断是否已经Hook过App。
