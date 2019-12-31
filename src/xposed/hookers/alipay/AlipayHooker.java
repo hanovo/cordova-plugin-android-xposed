@@ -38,7 +38,6 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 import static de.robv.android.xposed.XposedHelpers.callMethod;
 import static de.robv.android.xposed.XposedHelpers.callStaticMethod;
-import static de.robv.android.xposed.XposedHelpers.findClass;
 
 /**
  * 支付宝钩子。
@@ -91,7 +90,7 @@ public class AlipayHooker extends BaseAppHooker {
       this.hookLauncherActivity(lpparam);
 
       // Hook TradeDao 插入方法(即到账的时候执行)
-      // this.hookTradeDaoInsertMessageInfo();
+      this.hookTradeDaoInsertMessageInfo();
 
       // Hook 消息数据库插入方法（监听到账消息）
       // AlipayHooker.this.hookMessageBoxServiceDaoInsertMessageInfo();
@@ -293,44 +292,32 @@ public class AlipayHooker extends BaseAppHooker {
             XposedBridge.log(TAG + ": TradeDao.insertMessageInfo 第一个参数为 " + data);
 
             if (data.contains("收款到账")) {
+              // 主动收款模式
               JSONObject paramJson = new JSONObject(data);
               JSONObject contentJson = new JSONObject(paramJson.getString("content"));
               String fromUserId = paramJson.optString("userId");
               String remark = contentJson.getString("assistMsg2");
               String receiveAmount = contentJson.getString("content").replace("￥", "");
               String alipayMsgId = paramJson.optString("msgId");
+
               XposedBridge.log(TAG + ": TradeDao.insertMessageInfo 订单ID: " + remark + "，付款方userId: " + fromUserId);
 
-              // todo: 主动收款回调
-              /*
-              final String mNotifyUrl = CommonUtil.readConfigFromFile("callbackUrl", "");
-              String mSignToken = CommonUtil.readConfigFromFile("signToken", "");
-              String dt = System.currentTimeMillis() + "";
-              String sign = MD5.digest(dt + remark + receiveAmount + alipayMsgId + "alipay" + mSignToken + fromUserId);
+              // 回调，以广播的形式发送出去
+              Map<String, Object> orderInfo = new HashMap<>();
+              orderInfo.put("remark", remark);
+              orderInfo.put("amount", receiveAmount);
+              orderInfo.put("payerUserId", fromUserId);
+              orderInfo.put("alipayMsgId", alipayMsgId);
 
-              RequestParams params = new RequestParams();
-              params.addBodyParameter("remark", remark);
-              params.addBodyParameter("channel", "alipay-collect-up");
-              params.addBodyParameter("receiveAmount", receiveAmount);
-              params.addBodyParameter("fromUserId", fromUserId);
-              params.addBodyParameter("alipayMsgId", alipayMsgId);
-              params.addBodyParameter("signToken", mSignToken);
-              params.addBodyParameter("dt", dt);
-              params.addBodyParameter("sign", sign);
+              Intent intent = new Intent();
+              intent.setAction(PluginIntentActions.AlipayCollectUp);
+              intent.putExtra("data", JSON.toJSONString(orderInfo));
 
-              HttpUtils httpUtils = new HttpUtils(30000);
-              httpUtils.send(HttpRequest.HttpMethod.POST, mNotifyUrl, params, new RequestCallBack<String>() {
-                @Override
-                public void onFailure(HttpException arg0, String arg1) {
-                  XposedBridge.log(TAG + ": 主动收款回调失败。" + arg1);
-                }
-
-                @Override
-                public void onSuccess(ResponseInfo<String> res) {
-                  String data = res.result;
-                  XposedBridge.log(TAG + ": 主动收款回调成功。" + data);
-                }
-              });*/
+              XposedBridge.log(TAG + ": 收款到账广播开始...");
+              mAlipayLauncherActivity.sendBroadcast(intent);
+              XposedBridge.log(TAG + ": 收款到账广播成功.");
+            } else if (data.contains("二维码收款") || data.contains("收到一笔转账") || data.contains("成功收款")){
+              // 转账模式
             }
 
             XposedBridge.log(TAG + ": TradeDao.insertMessageInfo 结束");

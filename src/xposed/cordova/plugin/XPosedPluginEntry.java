@@ -254,6 +254,22 @@ public class XPosedPluginEntry extends CordovaPlugin {
   }
 
   /**
+   * 收款回调。
+   */
+  public void collectUpCallback(String data) throws JSONException {
+    JSONObject payload = new JSONObject();
+    payload.put("action", "CollectUp");
+    payload.put("data", new JSONObject(data));
+
+    PluginResult result = new PluginResult(PluginResult.Status.OK, payload);
+    result.setKeepCallback(true);
+
+    mCallbackContext.sendPluginResult(result);
+
+    log("检测到收款，回调中...", "info");
+  }
+
+  /**
    * 追加日志。
    */
   public void log(String content, String type) throws JSONException {

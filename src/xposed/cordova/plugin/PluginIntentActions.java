@@ -14,7 +14,7 @@ public class PluginIntentActions {
   public static final String AlipayCookieFetched = "com.skynet.xposed.alipay.cookie.fetched";
 
   // 支付宝收款消息
-  public static final String AlipayBillReceived = "com.skynet.xposed.alipay.bill.received";
+  public static final String AlipayCollectUp = "com.skynet.xposed.alipay.collect.up";
 
   // 支付宝普通消息
   public static final String AlipayMessageReceived = "com.skynet.xposed.alipay.message.received";

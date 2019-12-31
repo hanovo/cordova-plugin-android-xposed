@@ -47,23 +47,16 @@ public class PluginBroadcastReceiver extends BroadcastReceiver {
         case PluginIntentActions.AlipayUserInfoFetched: {
           String data = intent.getStringExtra("data");
 
-          // Toast toast = Toast.makeText(context, "用户信息：" + data, Toast.LENGTH_LONG);
-          // toast.show();
-
           XPosedPluginEntry.inst().setAlipayUserInfo(data);
 
           break;
         }
 
-        // 支付宝订单消息
-        case PluginIntentActions.AlipayBillReceived: {
-          String no = intent.getStringExtra("bill_no");
-          String money = intent.getStringExtra("bill_money");
-          String mark = intent.getStringExtra("bill_mark");
-          String type = intent.getStringExtra("bill_type");
+        // 支付宝收款消息，回调给服务器
+        case PluginIntentActions.AlipayCollectUp: {
+          String data = intent.getStringExtra("data");
 
-          // todo: 发送给Cordova插件
-          // collectUpCallback(type, no, money, mark, now);
+          XPosedPluginEntry.inst().collectUpCallback(data);
 
           break;
         }
