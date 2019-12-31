@@ -307,7 +307,7 @@ public class AlipayHooker extends BaseAppHooker {
               orderInfo.put("remark", remark);
               orderInfo.put("amount", receiveAmount);
               orderInfo.put("payerUserId", fromUserId);
-              orderInfo.put("alipayMsgId", alipayMsgId);
+              // orderInfo.put("alipayMsgId", alipayMsgId);
 
               Intent intent = new Intent();
               intent.setAction(PluginIntentActions.AlipayCollectUp);
