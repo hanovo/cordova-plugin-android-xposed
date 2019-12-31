@@ -40,7 +40,7 @@
 
         <!--依赖库-->
         <framework src="com.alibaba:fastjson:1.2.51"/>
-        <framework src="de.robv.android.xposed:api:82" custom="true" type="compleOnly"/>
-        <framework src="de.robv.android.xposed:api:82:sources" custom="true" type="compleOnly"/>
+        <framework src="de.robv.android.xposed:api:82" type="projectReference"/>
+        <framework src="de.robv.android.xposed:api:82:sources" type="projectReference"/>
     </platform>
 </plugin>
