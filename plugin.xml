@@ -38,9 +38,7 @@
         <source-file src="assets/xposed_init" target-dir="assets"/>
         <source-file src="src/xposed" target-dir="src/main/java/com/skynet"/>
 
-        <!--依赖库-->
-        <framework src="com.alibaba:fastjson:1.2.51"/>
-        <framework src="de.robv.android.xposed:api:82" custom="true" type="gradleReference"/>
-        <framework src="de.robv.android.xposed:api:82:sources" custom="true" type="gradleReference"/>
+        <!--依赖库，由于不能设置gralde的库依赖类型，在此使用自定义的引用-->
+        <framework src="src/android/xposed.gradle" custom="true" type="gradleReference"/>
     </platform>
 </plugin>
