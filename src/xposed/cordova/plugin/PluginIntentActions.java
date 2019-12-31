@@ -25,7 +25,8 @@ public class PluginIntentActions {
   // 收到商户服务消息
   public static final String AlipayTradeNoFetched = "com.skynet.xposed.alipay.trade.number.fetched";
 
-
+  // 追加日志
+  public static final String AppendLog = "com.skynet.xposed.append.log";
 
   public static final String AppQrCodeReceived = "com.tools.payhelper.qrcodereceived";
   public static final String Notify = "com.tools.payhelper.notify";

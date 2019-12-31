@@ -31,6 +31,30 @@ public class PluginBroadcastReceiver extends BroadcastReceiver {
     try {
       String action = intent.getAction();
       switch (action) {
+        // 支付宝用户Cookie获取成功
+        case PluginIntentActions.AlipayCookieFetched: {
+          String cookie = intent.getStringExtra("cookie");
+
+          Toast toast = Toast.makeText(context, "Cookie接收成功", Toast.LENGTH_LONG);
+          toast.show();
+
+          XPosedPluginEntry.inst().setAlipayUserCookie(cookie);
+
+          break;
+        }
+
+        // 用户信息获取成功
+        case PluginIntentActions.AlipayUserInfoFetched: {
+          String data = intent.getStringExtra("data");
+
+          // Toast toast = Toast.makeText(context, "用户信息：" + data, Toast.LENGTH_LONG);
+          // toast.show();
+
+          XPosedPluginEntry.inst().setAlipayUserInfo(data);
+
+          break;
+        }
+
         // 支付宝订单消息
         case PluginIntentActions.AlipayBillReceived: {
           String no = intent.getStringExtra("bill_no");
@@ -64,23 +88,13 @@ public class PluginBroadcastReceiver extends BroadcastReceiver {
           break;
         }
 
-        // 支付宝用户Cookie获取成功
-        case PluginIntentActions.AlipayCookieFetched: {
-          String cookie = intent.getStringExtra("cookie");
+        // 追加日志
+        case PluginIntentActions.AppendLog: {
+          String packageName = intent.getStringExtra("packageName");
+          String content = intent.getStringExtra("content");
+          String type = intent.getStringExtra("type");
 
-          // todo: 发送给Cordova插件
-
-          break;
-        }
-
-        // 用户信息获取成功
-        case PluginIntentActions.AlipayUserInfoFetched: {
-          String data = intent.getStringExtra("data");
-
-          Toast toast = Toast.makeText(context, "用户信息：" + data, Toast.LENGTH_LONG);
-          toast.show();
-
-          // todo: 发送给Cordova插件
+          XPosedPluginEntry.inst().log(content, type);
 
           break;
         }

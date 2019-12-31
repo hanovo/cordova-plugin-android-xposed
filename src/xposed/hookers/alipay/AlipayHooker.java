@@ -36,6 +36,10 @@ import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
+import static de.robv.android.xposed.XposedHelpers.callMethod;
+import static de.robv.android.xposed.XposedHelpers.callStaticMethod;
+import static de.robv.android.xposed.XposedHelpers.findClass;
+
 /**
  * 支付宝钩子。
  */
@@ -169,6 +173,7 @@ public class AlipayHooker extends BaseAppHooker {
           mAlipayLauncherActivity.registerReceiver(mAlipayBroadcastReceiver, intentFilter);
 
           AlipayHooker.this.getUserLoginInfo();
+          AlipayHooker.this.getUserCookie();
         }
       });
 
@@ -807,32 +812,6 @@ public class AlipayHooker extends BaseAppHooker {
   }
 
   /**
-   * 获取登录的支付宝Cookie。
-   */
-  public String getAlipayCookie() {
-    String alipayCookie = "";
-
-    Class<?> AmnetUserInfo = this.findClass("com.alipay.mobile.common.transportext.biz.appevent.AmnetUserInfo");
-    XposedHelpers.callStaticMethod(AmnetUserInfo, "getSessionid");
-
-    Class<?> ExtTransportEnv = this.findClass("com.alipay.mobile.common.transportext.biz.shared.ExtTransportEnv");
-    Context context = (Context) XposedHelpers.callStaticMethod(ExtTransportEnv, "getAppContext");
-
-    if (context != null) {
-      Class<?> ReadSettingServerUrl = this.findClass("com.alipay.mobile.common.helper.ReadSettingServerUrl");
-      Object readSettingServerUrl = XposedHelpers.callStaticMethod(ReadSettingServerUrl, "getInstance");
-      if (readSettingServerUrl != null) {
-        String gWFURL = ".alipay.com";
-
-        Class<?> GwCookieCacheHelper = this.findClass("com.alipay.mobile.common.transport.http.GwCookieCacheHelper");
-        alipayCookie = (String) XposedHelpers.callStaticMethod(GwCookieCacheHelper, "getCookie", gWFURL);
-      }
-    }
-
-    return alipayCookie;
-  }
-
-  /**
    * 获取当前登录用户社交信息。
    */
   public Object getUserSocialInfo() {
@@ -881,12 +860,14 @@ public class AlipayHooker extends BaseAppHooker {
       Object logonId = userInfoJson.get("logonId");
       Object realName = userInfoJson.get("realName");
       Object nickname = userInfoJson.get("showName");
+      Object userAvatar = userInfoJson.get("userAvatar");
 
       Map<String, Object> loginUserInfo = new HashMap<>();
       loginUserInfo.put("userId", userId);
       loginUserInfo.put("logonId", logonId);
       loginUserInfo.put("nickname", nickname);
       loginUserInfo.put("realName", realName);
+      loginUserInfo.put("headimgUrl", userAvatar);
 
       XposedBridge.log(TAG + ": 获取用户登录信息成功。" + JSON.toJSONString(loginUserInfo));
 
@@ -905,5 +886,50 @@ public class AlipayHooker extends BaseAppHooker {
     }
 
     return null;
+  }
+
+  /**
+   * 获取登录的支付宝Cookie。
+   */
+  public String getUserCookie() {
+    String alipayCookie = "";
+
+    try {
+      Class<?> AmnetUserInfo = this.findClass("com.alipay.mobile.common.transportext.biz.appevent.AmnetUserInfo");
+      XposedHelpers.callStaticMethod(AmnetUserInfo, "getSessionid");
+
+      Class<?> ExtTransportEnv = this.findClass("com.alipay.mobile.common.transportext.biz.shared.ExtTransportEnv");
+      Context context = (Context) XposedHelpers.callStaticMethod(ExtTransportEnv, "getAppContext");
+
+      if (context != null) {
+        Class<?> ReadSettingServerUrl = this.findClass("com.alipay.mobile.common.helper.ReadSettingServerUrl");
+        Object readSettingServerUrl = XposedHelpers.callStaticMethod(ReadSettingServerUrl, "getInstance");
+        if (readSettingServerUrl != null) {
+          String gWFURL = ".alipay.com";
+
+          Class<?> GwCookieCacheHelper = this.findClass("com.alipay.mobile.common.transport.http.GwCookieCacheHelper");
+          alipayCookie = (String) XposedHelpers.callStaticMethod(GwCookieCacheHelper, "getCookie", gWFURL);
+        }
+      }
+
+      if (alipayCookie.equals("")) {
+        XposedBridge.log(TAG + ": 获取用户Cookie失败。");
+      } else {
+        XposedBridge.log(TAG + ": 获取用户Cookie成功。" + alipayCookie);
+
+        // 以广播的形式发送出去
+        Intent intent = new Intent();
+        intent.setAction(PluginIntentActions.AlipayCookieFetched);
+        intent.putExtra("data", alipayCookie);
+
+        XposedBridge.log(TAG + ": 用户Cookie广播开始...");
+        mAlipayLauncherActivity.sendBroadcast(intent);
+        XposedBridge.log(TAG + ": 用户Cookie广播成功.");
+      }
+    } catch (Exception e) {
+      XposedBridge.log(TAG + ": 获取用户Cookie失败。" + e.getMessage());
+    }
+
+    return alipayCookie;
   }
 }

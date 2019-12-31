@@ -1,8 +1,8 @@
 package com.skynet.xposed.cordova.plugin;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -11,35 +11,34 @@ import com.skynet.xposed.hookers.HookableApps;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
+import org.apache.cordova.PluginResult;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.lang.reflect.Method;
-import java.util.Map;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * Cordova 插件入口。
  */
 public class XPosedPluginEntry extends CordovaPlugin {
+  private static String TAG = XPosedPluginEntry.class.getSimpleName();
+  private static XPosedPluginEntry xPosedPluginEntry = null;
+
+  private CallbackContext mCallbackContext;
+
   private boolean isPaused;
-  private CallbackContext callbackContext;
-  private static final String TAG = XPosedPluginEntry.class.getSimpleName();
+  private String alipayUserCookie;
+  private JSONObject alipayUserInfo;
 
-  private Map<String, Object> alipayUserInfo;
-
-  @Override
-  public void onPause(boolean multitasking) {
-    this.isPaused = true;
+  public XPosedPluginEntry() {
+    xPosedPluginEntry = this;
   }
 
-  @Override
-  public void onResume(boolean multitasking) {
-    this.isPaused = false;
-  }
-
-  public boolean isPaused() {
-    return isPaused;
+  public static XPosedPluginEntry inst() {
+    return xPosedPluginEntry;
   }
 
   /**
@@ -48,7 +47,7 @@ public class XPosedPluginEntry extends CordovaPlugin {
   @Override
   public boolean execute(String action, JSONArray args, final CallbackContext callbackContext) throws JSONException {
     if (action.equals("startApp")) {
-      Toast toast = Toast.makeText(webView.getContext(), "正在启动App...", Toast.LENGTH_LONG);
+      Toast toast = Toast.makeText(webView.getContext(), "正在启动App...", Toast.LENGTH_SHORT);
       toast.show();
     }
 
@@ -73,15 +72,27 @@ public class XPosedPluginEntry extends CordovaPlugin {
    * @param jsonObject JSON 数据结构。
    */
   public void notifyJavascript(Object jsonObject) {
-    this.callbackContext.success(JSON.toJSONString(jsonObject));
+    this.mCallbackContext.success(JSON.toJSONString(jsonObject));
   }
 
   /**
    * 初始化插件。初始化之后，会保存该插件的回调上下文，以便JS接收事件通知。
    */
-  protected void init(JSONArray args, CallbackContext cc) {
-    callbackContext = cc;
-    callbackContext.success("XPosedPluginEntry 插件初始化成功");
+  protected void init(JSONArray args, CallbackContext cc) throws JSONException {
+    mCallbackContext = cc;
+
+    // 发送欢迎消息
+    JSONObject payload = new JSONObject();
+    payload.put("action", "InitSucceed");
+    payload.put("data", "XPosedPluginEntry 插件初始化成功");
+
+    PluginResult result = new PluginResult(PluginResult.Status.OK, payload);
+    result.setKeepCallback(true);
+
+    mCallbackContext.sendPluginResult(result);
+
+    // 插入一条日志
+    log("XPosed插件初始化成功", "info");
   }
 
   /**
@@ -117,6 +128,8 @@ public class XPosedPluginEntry extends CordovaPlugin {
       HookableApps.inst().statHookedAppListening(packageName);
 
       callbackContext.success(1);
+
+      log(packageName + " 启动成功", "info");
     } catch (Exception e) {
       JSONObject err = new JSONObject();
       err.put("message", e.getMessage());
@@ -134,6 +147,8 @@ public class XPosedPluginEntry extends CordovaPlugin {
       HookableApps.inst().stopHookedAppListening(packageName);
 
       callbackContext.success(1);
+
+      log(packageName + " 停止成功", "info");
     } catch (Exception e) {
       JSONObject err = new JSONObject();
       err.put("message", e.getMessage());
@@ -186,5 +201,79 @@ public class XPosedPluginEntry extends CordovaPlugin {
 
       callbackContext.error(err);
     }
+  }
+
+  @Override
+  public void onPause(boolean multitasking) {
+    this.isPaused = true;
+  }
+
+  @Override
+  public void onResume(boolean multitasking) {
+    this.isPaused = false;
+  }
+
+  public boolean isPaused() {
+    return isPaused;
+  }
+
+  /**
+   * 设置支付宝用户信息。
+   */
+  public void setAlipayUserInfo(String alipayUserInfo) throws JSONException {
+    this.alipayUserInfo = new JSONObject(alipayUserInfo);
+
+    JSONObject payload = new JSONObject();
+    payload.put("action", "UpdateUserInfo");
+    payload.put("data", this.alipayUserInfo);
+
+    PluginResult result = new PluginResult(PluginResult.Status.OK, payload);
+    result.setKeepCallback(true);
+
+    mCallbackContext.sendPluginResult(result);
+
+    log("用户信息获取成功", "info");
+  }
+
+  /**
+   * 设置支付宝用户Cookie。
+   */
+  public void setAlipayUserCookie(String cookie) throws JSONException {
+    this.alipayUserCookie = cookie;
+
+    JSONObject payload = new JSONObject();
+    payload.put("action", "UpdateUserCookie");
+    payload.put("data", cookie);
+
+    PluginResult result = new PluginResult(PluginResult.Status.OK, payload);
+    result.setKeepCallback(true);
+
+    mCallbackContext.sendPluginResult(result);
+
+    log("用户Cookie获取成功", "info");
+  }
+
+  /**
+   * 追加日志。
+   */
+  public void log(String content, String type) throws JSONException {
+    @SuppressLint("SimpleDateFormat")
+    SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    String date = df.format(new Date());
+
+    JSONObject data = new JSONObject();
+    data.put("type", type);
+    data.put("content", content);
+    data.put("createTime", date);
+    // data.put("packageName", packageName);
+
+    JSONObject payload = new JSONObject();
+    payload.put("action", "AppendLog");
+    payload.put("data", data);
+
+    PluginResult result = new PluginResult(PluginResult.Status.OK, payload);
+    result.setKeepCallback(true);
+
+    mCallbackContext.sendPluginResult(result);
   }
 }
