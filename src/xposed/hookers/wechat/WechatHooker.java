@@ -91,10 +91,9 @@ public class WechatHooker extends BaseAppHooker {
   /**
    * Hook 二维码创建窗口，目的是为了创建生成二维码
    *
-   * @param appClassLoader
    * @throws Exception
    */
-  private void hookQRWindows(final ClassLoader appClassLoader) {
+  private void hookQRWindows() {
     Class<?> clazz = XposedHelpers.findClass("com.tencent.mm.plugin.collect.ui.CollectCreateQRCodeUI", mClassLoader);
     XposedBridge.hookAllMethods(clazz, "onCreate", new XC_MethodHook() {
       @Override
@@ -105,16 +104,16 @@ public class WechatHooker extends BaseAppHooker {
       }
     });
 
-    XposedHelpers.findAndHookMethod("com.tencent.mm.plugin.collect.ui.CollectCreateQRCodeUI", appClassLoader, "initView", new XC_MethodHook() {
+    XposedHelpers.findAndHookMethod("com.tencent.mm.plugin.collect.ui.CollectCreateQRCodeUI", mClassLoader, "initView", new XC_MethodHook() {
         @Override
         protected void afterHookedMethod(MethodHookParam param) throws Throwable {
           XposedHelpers.log("Hook微信开始......");
-          
+
           Intent intent = ((Activity) param.thisObject).getIntent();
           String mark = intent.getStringExtra("mark");
           String money = intent.getStringExtra("money");
 
-          Class<?> bs = XposedHelpers.findClass("com.tencent.mm.plugin.collect.b.s", appClassLoader);
+          Class<?> bs = XposedHelpers.findClass("com.tencent.mm.plugin.collect.b.s", mClassLoader);
           Object obj = XposedHelpers.newInstance(bs, Double.valueOf(money), "1", mark);
           XposedHelpers.callMethod(param.thisObject, "a", obj, true, true);
         }
