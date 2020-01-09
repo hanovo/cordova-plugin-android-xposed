@@ -4,6 +4,7 @@ import android.content.pm.ApplicationInfo;
 
 import com.skynet.xposed.hookers.HookableApps;
 import com.skynet.xposed.hookers.alipay.AlipayHooker;
+import com.skynet.xposed.hookers.wechat.WechatHooker;
 
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.XposedBridge;
@@ -14,6 +15,7 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
  */
 public class XposedMain implements IXposedHookLoadPackage {
   private static boolean isAlipayHooked = false;
+  private static boolean isWechatHooked = false;
   
   @Override
   public void handleLoadPackage(XC_LoadPackage.LoadPackageParam param) throws Throwable {
@@ -32,7 +34,7 @@ public class XposedMain implements IXposedHookLoadPackage {
           isAlipayHooked = true;
           AlipayHooker.inst().hook(param);
         } else {
-          XposedBridge.log("支付宝已经Hook过了，忽略");
+          XposedBridge.log("支付宝已经Hook过了...");
         }
         break;
 
@@ -40,6 +42,12 @@ public class XposedMain implements IXposedHookLoadPackage {
         break;
 
       case HookableApps.PackageWechat:
+        if (!isWechatHooked) {
+          isWechatHooked = true;
+          WechatHooker.inst().hook(param);
+        } else {
+          XposedBridge.log("微信已经Hook过了...");
+        }
         break;
 
       default:
